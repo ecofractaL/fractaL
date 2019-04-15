@@ -22,6 +22,8 @@ json_pd = climate_json
 normalized_climate_data = fractal.normalize_climate_data(climate_json)
 plt.scatter(*zip(*normalized_climate_data))
 
+#print(normalized_climate_data)
+
 
 '''
 Convert Array to pandas
@@ -30,12 +32,12 @@ Convert Array to pandas
 labels = ['date', 'temperature']
 climatefile = pd.DataFrame.from_records(normalized_climate_data, columns=labels)
 
+
 '''export the dataframe to csv. then read it with csv_to_MIDITime function'''
 climatefile.to_csv('sample_data/climatefile.csv', index=False)
 
 
 climate_ex = fractal.csv_to_MIDITime_data('sample_data/climatefile.csv')
-
 
 ###
 #Instantiate the class with a tempo (120bpm), the name file name
@@ -50,6 +52,7 @@ mymidi = MIDITime(120, 'fractal.mid',100, 4, 2)
 
 # Make a beat based on days_sice_epoch(maybe chance to UNIX time - more common used)
 my_data_timed = [{'beat': mymidi.beat(d['days_since_epoch']), 'magnitude': d['magnitude']} for d in climate_ex]
+
 
 #Setting starting time
 start_time = my_data_timed[0]['beat']

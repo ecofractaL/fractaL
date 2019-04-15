@@ -4,10 +4,14 @@
 Using specific functions for sonification. This code is partially inspired by
 the project Sonify (https://github.com/erinspace/sonify) with some
 modifications to be applied on environmental data.
-Although some parameters were changed, we decided to keep the functions name as
-a regognition of the Erin Braswell's work.
+Although some parameters were changed, we decided to keep some functions name
+as originally defined by Erin Braswell at her work.
 Currently our focus will be the temperature, conductivity and salinity data.
 Further steps: biodiversity, birds and big mammals migratory data.
+
+version 0.0.1
+March, 3rd 2019
+sjacques 
 """
 #Playing MIDI
 
@@ -15,6 +19,7 @@ Further steps: biodiversity, birds and big mammals migratory data.
 
 import csv
 import io
+import numpy as np
 import pygame
 
 from midiutil.MidiFile import MIDIFile
@@ -179,7 +184,37 @@ def normalize_climate_data(climate_json):
 
 
 '''
-To use JSON with MIDItime library. It convert the 
+Import df to list and cetify we don't have NaN
+With this code we generate a file for multitrack analisys ike that created by
+multitrack_data on sonify: a nested list of tuples
+'''
+
+def normalize_climate_multi(df):
+    df = df.replace(np.nan, 0)
+
+#From df to list: year is the key and the othe variables will be its values
+    years_list = [int(year) for year in df['Date'].keys()]
+    temperature_list = [float(temp) for temp in df['Temperature'].tolist()]
+    conductivity_list = [float(conduct) for conduct in df['Condutivity'].tolist()]
+    salinity_list = [float(sal) for sal in df['Salinity'].tolist()]
+    
+#normalize data
+    normalized_years_multi = scale_list_to_range(years_list, new_min=0, new_max=30)
+    normalized_temp_multi = scale_list_to_range(temperature_list, new_min=30, new_max=127)
+    normalized_cond_multi = scale_list_to_range(conductivity_list, new_min=30, new_max=127)
+    normalized_sal_multi = scale_list_to_range(salinity_list, new_min=30, new_max=127)
+    
+    normed_climate_multi = list(zip( normalized_years_multi, normalized_temp_multi))
+    normed_cond_multi = list(zip( normalized_years_multi, normalized_cond_multi))
+    normed_sal_multi = list(zip( normalized_years_multi, normalized_sal_multi))
+    
+    normed_multi = [normed_climate_multi]+[normed_cond_multi]+[normed_sal_multi]
+    
+    return(normed_multi)
+
+
+'''
+To use JSON with MIDItime library. It converts the df to a dictionary
 
 '''
 def csv_to_MIDITime_data(filename):
@@ -195,7 +230,7 @@ def csv_to_MIDITime_data(filename):
 
 """
 Export the MIDIfile
-data: list of tuples of x, y coordinates for pitch and timing
+data: dictionary of x, y coordinates for pitch and timing
 Optional: add a string to the start of the data list to specify instrument!
 type: the type of data passed to create tracks. Either 'single' or 'multiple'
 """
